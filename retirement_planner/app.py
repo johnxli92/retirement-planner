@@ -1,12 +1,15 @@
 from __future__ import annotations
 
 import sys
-from pathlib import Path
+import os
 
 # Add parent directory to path for Streamlit Cloud deployment
-parent_dir = Path(__file__).parent.parent
-if str(parent_dir) not in sys.path:
-    sys.path.insert(0, str(parent_dir))
+# This ensures the retirement_planner package can be imported
+script_dir = os.path.dirname(os.path.abspath(__file__))
+parent_dir = os.path.dirname(script_dir)
+
+if parent_dir not in sys.path:
+    sys.path.insert(0, parent_dir)
 
 import streamlit as st
 import pandas as pd

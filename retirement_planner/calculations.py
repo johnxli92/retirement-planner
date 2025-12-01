@@ -5,7 +5,8 @@ from typing import List, Literal, Dict, Any
 
 import pandas as pd
 
-from retirement_planner.taxes import TaxInput, TaxResult, compute_taxes, estimate_brokerage_gains
+# Use relative import for better compatibility with Streamlit Cloud
+from .taxes import TaxInput, TaxResult, compute_taxes, estimate_brokerage_gains
 
 
 WithdrawalOrder = Literal["brokerage_first", "tax_deferred_first"]
