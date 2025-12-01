@@ -1,3 +1,0 @@
-# Streamlit Cloud will install these packages
-# This file is optional if requirements.txt exists, but can help with package resolution
-
