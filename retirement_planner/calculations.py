@@ -66,8 +66,9 @@ def run_projection(config: ProjectionConfig) -> pd.DataFrame:
         withdrawal_brokerage = 0.0
         
         # Social Security starts at age 62, maximum benefit at age 62 is ~$41,000/year
+        # Only applies during retirement years
         SOCIAL_SECURITY_MAX_AGE_62 = 41000.0
-        social_security_income = SOCIAL_SECURITY_MAX_AGE_62 if age >= 62 else 0.0
+        social_security_income = SOCIAL_SECURITY_MAX_AGE_62 if (is_retirement_year and age >= 62) else 0.0
 
         tax_input: TaxInput | None = None
         tax_result: TaxResult | None = None
