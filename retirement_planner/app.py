@@ -19,19 +19,19 @@ from retirement_planner.calculations import ProjectionConfig, run_projection
 
 def _default_config() -> ProjectionConfig:
     return ProjectionConfig(
-        current_age=35,
-        retire_age=65,
+        current_age=51,
+        retire_age=55,
         end_age=100,
-        current_401k_balance=300000.0,
-        current_brokerage_balance=150000.0,
-        annual_401k_contribution=22000.0,
-        annual_brokerage_contribution=10000.0,
-        real_return_401k=0.05,
-        real_return_brokerage=0.05,
+        current_401k_balance=3500000.0,
+        current_brokerage_balance=600000.0,
+        annual_401k_contribution=31000.0,
+        annual_brokerage_contribution=24000.0,
+        real_return_401k=0.07,
+        real_return_brokerage=0.07,
         swr=0.04,
         filing_status="single",
         state_tax_rate=0.05,
-        withdrawal_order="brokerage_first",
+        withdrawal_order="tax_deferred_first",
     )
 
 
