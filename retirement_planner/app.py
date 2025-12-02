@@ -32,6 +32,7 @@ def _default_config() -> ProjectionConfig:
         filing_status="married",
         state_tax_rate=0.05,
         withdrawal_order="tax_deferred_first",
+        social_security_start_age=62,
     )
 
 
@@ -69,6 +70,9 @@ def _build_sidebar(config: ProjectionConfig) -> ProjectionConfig:
     filing_status = st.sidebar.selectbox("Filing status", options=["single", "married"], index=0 if config.filing_status == "single" else 1)
     state_tax_rate = st.sidebar.slider("State tax rate (%)", min_value=0.0, max_value=15.0, value=config.state_tax_rate * 100, step=0.5) / 100.0
 
+    st.sidebar.subheader("Social Security")
+    social_security_start_age = st.sidebar.slider("Social Security start age", min_value=62, max_value=70, value=config.social_security_start_age, step=1)
+
     return ProjectionConfig(
         current_age=int(current_age),
         retire_age=int(retire_age),
@@ -83,6 +87,7 @@ def _build_sidebar(config: ProjectionConfig) -> ProjectionConfig:
         filing_status=filing_status,
         state_tax_rate=float(state_tax_rate),
         withdrawal_order=withdrawal_order,
+        social_security_start_age=int(social_security_start_age),
     )
 
 

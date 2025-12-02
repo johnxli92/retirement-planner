@@ -32,6 +32,7 @@ class ProjectionConfig:
     filing_status: str = "single"
     state_tax_rate: float = 0.05
     withdrawal_order: WithdrawalOrder = "brokerage_first"
+    social_security_start_age: int = 62
 
 
 def _year_sequence(config: ProjectionConfig) -> List[int]:
@@ -65,16 +66,35 @@ def run_projection(config: ProjectionConfig) -> pd.DataFrame:
         withdrawal_401k = 0.0
         withdrawal_brokerage = 0.0
         
-        # Social Security starts at age 62, maximum benefit at age 62 is ~$41,000/year
+        # Social Security starts at user-selected age, maximum benefit varies by starting age
         # Only applies during retirement years
         # Apply COLA (Cost of Living Adjustment) - typically 2-3% per year
-        SOCIAL_SECURITY_MAX_AGE_62 = 41000.0
         SOCIAL_SECURITY_COLA = 0.025  # 2.5% annual COLA adjustment
         
-        if is_retirement_year and age >= 62:
-            # Calculate years since age 62 for COLA compounding
-            years_since_62 = age - 62
-            social_security_income = SOCIAL_SECURITY_MAX_AGE_62 * ((1 + SOCIAL_SECURITY_COLA) ** years_since_62)
+        # Base Social Security benefit at age 62 is ~$41,000/year
+        # Benefits are reduced if started before full retirement age (67) and increased if delayed
+        BASE_SS_AGE_62 = 41000.0
+        FULL_RETIREMENT_AGE = 67
+        
+        if is_retirement_year and age >= config.social_security_start_age:
+            # Adjust base benefit based on starting age
+            if config.social_security_start_age < FULL_RETIREMENT_AGE:
+                # Reduce by ~5.5% per year before full retirement age (up to 30% reduction at 62)
+                reduction_per_year = 0.055
+                years_early = FULL_RETIREMENT_AGE - config.social_security_start_age
+                base_benefit = BASE_SS_AGE_62 * (1 - (reduction_per_year * years_early))
+            elif config.social_security_start_age > FULL_RETIREMENT_AGE:
+                # Increase by ~8% per year after full retirement age (up to age 70)
+                increase_per_year = 0.08
+                years_delayed = min(config.social_security_start_age - FULL_RETIREMENT_AGE, 3)  # Max delay to 70
+                base_benefit = BASE_SS_AGE_62 * (1 + (increase_per_year * years_delayed))
+            else:
+                # Full retirement age - use base amount
+                base_benefit = BASE_SS_AGE_62
+            
+            # Calculate years since starting age for COLA compounding
+            years_since_start = age - config.social_security_start_age
+            social_security_income = base_benefit * ((1 + SOCIAL_SECURITY_COLA) ** years_since_start)
         else:
             social_security_income = 0.0
 
