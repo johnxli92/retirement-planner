@@ -64,6 +64,10 @@ def run_projection(config: ProjectionConfig) -> pd.DataFrame:
         withdrawal_total = 0.0
         withdrawal_401k = 0.0
         withdrawal_brokerage = 0.0
+        
+        # Social Security starts at age 62, maximum benefit at age 62 is ~$41,000/year
+        SOCIAL_SECURITY_MAX_AGE_62 = 41000.0
+        social_security_income = SOCIAL_SECURITY_MAX_AGE_62 if age >= 62 else 0.0
 
         tax_input: TaxInput | None = None
         tax_result: TaxResult | None = None
@@ -93,6 +97,7 @@ def run_projection(config: ProjectionConfig) -> pd.DataFrame:
                 state_rate=config.state_tax_rate,
                 ordinary_income=withdrawal_401k,
                 capital_gains_income=est_cap_gains,
+                social_security_income=social_security_income,
             )
             tax_result = compute_taxes(tax_input)
         else:
@@ -102,7 +107,9 @@ def run_projection(config: ProjectionConfig) -> pd.DataFrame:
         total_balance = balance_401k + balance_brokerage
 
         total_tax = tax_result.total_tax if tax_result else 0.0
-        net_income = withdrawal_total - total_tax
+        # Net income includes both withdrawals and Social Security
+        total_income = withdrawal_total + social_security_income
+        net_income = total_income - total_tax
 
         row: Dict[str, Any] = {
             "age": age,
@@ -114,6 +121,7 @@ def run_projection(config: ProjectionConfig) -> pd.DataFrame:
             "withdrawal_total": withdrawal_total,
             "withdrawal_401k": withdrawal_401k,
             "withdrawal_brokerage": withdrawal_brokerage,
+            "social_security_income": social_security_income,
             "tax_total": total_tax,
             "net_income_after_tax": net_income,
         }

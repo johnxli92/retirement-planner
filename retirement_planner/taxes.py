@@ -39,6 +39,7 @@ class TaxInput:
     state_rate: float  # e.g. 0.05 for 5%
     ordinary_income: float  # 401k withdrawals + other ordinary
     capital_gains_income: float  # taxable gains from brokerage
+    social_security_income: float = 0.0  # Social Security benefits
 
 
 @dataclass
@@ -75,13 +76,53 @@ def _apply_ordinary_brackets(taxable_income: float, brackets: List[OrdinaryBrack
     return tax
 
 
+def _calculate_taxable_social_security(ss_income: float, other_income: float, filing_status: str) -> float:
+    """Calculate taxable portion of Social Security benefits.
+    
+    Up to 50% taxable if combined income is $25k-$34k (single) or $32k-$44k (married)
+    Up to 85% taxable if combined income exceeds those thresholds
+    Combined income = AGI + nontaxable interest + 50% of SS
+    """
+    if ss_income <= 0:
+        return 0.0
+    
+    # Combined income = other income + 50% of SS
+    combined_income = other_income + (ss_income * 0.5)
+    
+    if filing_status == "married":
+        threshold_50 = 32000.0
+        threshold_85 = 44000.0
+    else:
+        threshold_50 = 25000.0
+        threshold_85 = 34000.0
+    
+    if combined_income <= threshold_50:
+        # No SS taxable
+        return 0.0
+    elif combined_income <= threshold_85:
+        # Up to 50% of SS is taxable
+        taxable_ss = min(ss_income * 0.5, (combined_income - threshold_50) * 0.5)
+        return taxable_ss
+    else:
+        # Up to 85% of SS is taxable
+        base_taxable = ss_income * 0.5  # First $9k-$12k range
+        additional_taxable = min(ss_income * 0.35, (combined_income - threshold_85) * 0.85)
+        return base_taxable + additional_taxable
+
+
 def compute_taxes(ti: TaxInput) -> TaxResult:
     filing_status = ti.filing_status if ti.filing_status in ("single", "married") else "single"
     brackets = _get_brackets(filing_status)
 
     std_deduction = STANDARD_DEDUCTION.get(filing_status, STANDARD_DEDUCTION["single"])
 
-    taxable_ordinary = max(0.0, ti.ordinary_income - std_deduction)
+    # Calculate taxable Social Security
+    other_income_for_ss = ti.ordinary_income + ti.capital_gains_income
+    taxable_ss = _calculate_taxable_social_security(ti.social_security_income, other_income_for_ss, filing_status)
+    
+    # Total ordinary income includes taxable portion of SS
+    total_ordinary_income = ti.ordinary_income + taxable_ss
+    taxable_ordinary = max(0.0, total_ordinary_income - std_deduction)
 
     federal_ordinary_tax = _apply_ordinary_brackets(taxable_ordinary, brackets)
 
@@ -90,7 +131,8 @@ def compute_taxes(ti: TaxInput) -> TaxResult:
 
     federal_tax = federal_ordinary_tax + federal_capital_tax
 
-    total_income = ti.ordinary_income + ti.capital_gains_income
+    # State tax on total income (including SS, varies by state but simplified here)
+    total_income = ti.ordinary_income + ti.capital_gains_income + ti.social_security_income
     state_tax = max(0.0, total_income) * max(0.0, ti.state_rate)
 
     total_tax = federal_tax + state_tax

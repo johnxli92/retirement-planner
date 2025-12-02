@@ -22,7 +22,7 @@ def _default_config() -> ProjectionConfig:
         current_age=51,
         retire_age=55,
         end_age=100,
-        current_401k_balance=3000000.0,
+        current_401k_balance=300000.0,
         current_brokerage_balance=600000.0,
         annual_401k_contribution=22000.0,
         annual_brokerage_contribution=12000.0,
@@ -133,6 +133,7 @@ def main() -> None:
         display_cols = [
             "age",
             "withdrawal_total",
+            "social_security_income",
             "tax_total",
             "net_income_after_tax",
             "tax_effective_rate",
@@ -142,6 +143,7 @@ def main() -> None:
         ]
         currency_cols = [
             "withdrawal_total",
+            "social_security_income",
             "tax_total",
             "net_income_after_tax",
             "balance_401k",
@@ -166,6 +168,7 @@ def main() -> None:
         "withdrawal_total",
         "withdrawal_401k",
         "withdrawal_brokerage",
+        "social_security_income",
         "tax_total",
         "net_income_after_tax",
         "federal_tax",
