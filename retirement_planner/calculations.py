@@ -67,8 +67,16 @@ def run_projection(config: ProjectionConfig) -> pd.DataFrame:
         
         # Social Security starts at age 62, maximum benefit at age 62 is ~$41,000/year
         # Only applies during retirement years
+        # Apply COLA (Cost of Living Adjustment) - typically 2-3% per year
         SOCIAL_SECURITY_MAX_AGE_62 = 41000.0
-        social_security_income = SOCIAL_SECURITY_MAX_AGE_62 if (is_retirement_year and age >= 62) else 0.0
+        SOCIAL_SECURITY_COLA = 0.025  # 2.5% annual COLA adjustment
+        
+        if is_retirement_year and age >= 62:
+            # Calculate years since age 62 for COLA compounding
+            years_since_62 = age - 62
+            social_security_income = SOCIAL_SECURITY_MAX_AGE_62 * ((1 + SOCIAL_SECURITY_COLA) ** years_since_62)
+        else:
+            social_security_income = 0.0
 
         tax_input: TaxInput | None = None
         tax_result: TaxResult | None = None
