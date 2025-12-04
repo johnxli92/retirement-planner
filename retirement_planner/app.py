@@ -118,15 +118,27 @@ def main() -> None:
 
     df = run_projection(config)
 
-    retire_row = df[df["age"] == config.retire_age].iloc[0]
+    # Age selector slider in main window
+    st.markdown("### Select Age to View Projections")
+    selected_age = st.slider(
+        "Age",
+        min_value=config.current_age,
+        max_value=config.end_age,
+        value=config.retire_age,
+        step=1,
+        key="age_selector"
+    )
+    
+    # Get row for selected age
+    selected_row = df[df["age"] == selected_age].iloc[0]
 
     col1, col2, col3 = st.columns(3)
     with col1:
-        st.metric("Portfolio at retirement", _format_currency(retire_row['total_balance']))
+        st.metric("Portfolio Balance", _format_currency(selected_row['total_balance']))
     with col2:
-        st.metric("Annual withdrawal (pre-tax)", _format_currency(retire_row['withdrawal_total']))
+        st.metric("Annual withdrawal (pre-tax)", _format_currency(selected_row['withdrawal_total']))
     with col3:
-        st.metric("Annual income (after tax)", _format_currency(retire_row['net_income_after_tax']))
+        st.metric("Annual income (after tax)", _format_currency(selected_row['net_income_after_tax']))
 
     st.markdown("### Portfolio balances by age")
     balance_chart_df = df[["age", "balance_401k", "balance_brokerage", "total_balance"]].set_index("age")
